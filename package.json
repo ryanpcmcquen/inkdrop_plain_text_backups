@@ -1,0 +1,25 @@
+{
+    "name": "plain_text_backups",
+    "main": "./lib/index",
+    "version": "0.1.0",
+    "description": "Plain text markdown backups for Inkdrop.",
+    "keywords": [],
+    "repository": "git@github.com:ryanpcmcquen/inkdrop_plain_text_backups.git",
+    "license": "MPL-2.0",
+    "styleSheets": [],
+    "scripts": {
+        "build": "babel src/ -d lib/",
+        "dev": "babel src/ -s -d lib/ --watch"
+    },
+    "engines": {
+        "inkdrop": "^5.x"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "@babel/cli": "7.x.x",
+        "@babel/core": "7.x.x",
+        "@babel/preset-env": "7.x.x",
+        "@babel/preset-react": "7.x.x",
+        "prettier": "2.x.x"
+    }
+}
