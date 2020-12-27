@@ -1,7 +1,7 @@
 {
     "name": "plain_text_backups",
     "main": "./lib/index",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Plain text markdown backups for Inkdrop.",
     "keywords": [],
     "repository": "git@github.com:ryanpcmcquen/inkdrop_plain_text_backups.git",
