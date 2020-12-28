@@ -11,3 +11,7 @@ Then, backups will be created under:
 ```
 
 A full sync is done on the initial activation, after that, changes are written using the database `onChange` event.
+
+Now with renaming support!
+
+![Renaming demo](assets/inkdrop_plain_text_backups_renaming_demo.gif)

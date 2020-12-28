@@ -23,7 +23,7 @@ module.exports = {
                     );
                     this.dataMap.books[doc.bookId] = bookData.name;
 
-                    this.writeNote(
+                    await this.writeNote(
                         `${plainTextPath}/${bookData.name}`,
                         doc.title,
                         doc.body
@@ -49,7 +49,7 @@ module.exports = {
                 const plainTextPath = `${backupPath}/PLAIN_TEXT`;
                 this.disposable = inkdrop.main.dataStore.getLocalDB();
                 await this.getDataAndWriteAllNotes(plainTextPath);
-                this.writeMaps(plainTextPath, this.dataMap);
+                await this.writeMaps(plainTextPath, this.dataMap);
                 // Sync stuff on changes:
                 this.disposable.onChange(async (change) => {
                     try {
@@ -82,16 +82,18 @@ module.exports = {
                                     this.dataMap.notes[change.id] =
                                         change.doc.title;
                                 }
-                                this.writeNote(
+                                await this.writeNote(
                                     bookPath,
                                     change.doc.title,
                                     change.doc.body
                                 );
-                                this.writeMaps(plainTextPath, this.dataMap);
+                                await this.writeMaps(
+                                    plainTextPath,
+                                    this.dataMap
+                                );
 
                                 break;
                             case "book":
-                                debugger;
                                 if (
                                     change.doc.name !==
                                     this.dataMap.books[change.id]
@@ -102,18 +104,21 @@ module.exports = {
                                             "utf8"
                                         )
                                     );
-                                    debugger;
 
                                     await fs.rename(
                                         `${plainTextPath}/${
                                             oldDataMap.books[change.id]
                                         }`,
-                                        `${plainTextPath}/${
-                                            this.dataMap.books[change.id]
-                                        }`
+                                        `${plainTextPath}/${change.doc.name}`
                                     );
+
                                     this.dataMap.books[change.id] =
                                         change.doc.name;
+
+                                    await this.writeMaps(
+                                        plainTextPath,
+                                        this.dataMap
+                                    );
                                 }
                                 break;
                         }
