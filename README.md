@@ -10,7 +10,7 @@ Then, backups will be created under:
 {{ BACKUP_PATH }}/PLAIN_TEXT/{{ NOTEBOOK_NAME }}/{{ NOTE_TITLE }}.md
 ```
 
-A full sync is done on the initial activation, after that, changes are written using the database `onChange` event.
+A full backup is done on the initial app launch or activation, after that, changes are written using the database `onChange` event.
 
 Now with renaming support!
 
