@@ -1,6 +1,9 @@
 import { promises as fs } from "fs";
+import { CompositeDisposable } from "event-kit";
+import * as RestoreSidebar from "./restore_sidebar";
 
 module.exports = {
+    subscriptions: new CompositeDisposable(),
     disposable: null,
     dataMap: { books: {}, notes: {} },
     getDataMapPath: (plainTextPath) => {
@@ -21,13 +24,15 @@ module.exports = {
                     const bookData = await this.disposable.books.get(
                         doc.bookId
                     );
-                    this.dataMap.books[doc.bookId] = bookData.name;
+                    if (bookData && bookData?.name) {
+                        this.dataMap.books[doc.bookId] = bookData.name;
 
-                    await this.writeNote(
-                        `${plainTextPath}/${bookData.name}`,
-                        doc.title,
-                        doc.body
-                    );
+                        await this.writeNote(
+                            `${plainTextPath}/${bookData.name}`,
+                            doc.title,
+                            doc.body
+                        );
+                    }
                 })
             );
 
@@ -50,6 +55,17 @@ module.exports = {
                 this.disposable = inkdrop.main.dataStore.getLocalDB();
                 await this.getDataAndWriteAllNotes(plainTextPath);
                 await this.writeMaps(plainTextPath, this.dataMap);
+
+                inkdrop.components.registerClass(RestoreSidebar.default);
+                // debugger;
+                this.subscriptions.add(
+                    inkdrop.commands.add(document.body, {
+                        "plain_text_backups:restore_all_backups":
+                            RestoreSidebar.toggle,
+                    })
+                );
+                RestoreSidebar.show();
+
                 // Sync stuff on changes:
                 this.disposable.onChange(async (change) => {
                     try {
@@ -95,8 +111,9 @@ module.exports = {
                                 break;
                             case "book":
                                 if (
+                                    change?.doc?.name &&
                                     change.doc.name !==
-                                    this.dataMap.books[change.id]
+                                        this.dataMap.books[change.id]
                                 ) {
                                     const oldDataMap = JSON.parse(
                                         await fs.readFile(
@@ -138,6 +155,8 @@ module.exports = {
             if (this.disposable) {
                 this.disposable.dispose();
             }
+            this.subscriptions.dispose();
+            inkdrop.components.deleteClass(RestoreSidebar.default);
         }
     },
 };
