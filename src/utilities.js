@@ -36,8 +36,6 @@ const self = (module.exports = {
                         self.dataMap.notes[doc._id] = {};
                     }
                     self.dataMap.notes[doc._id].title = doc.title;
-                    self.dataMap.notes[doc._id].bookId = doc.bookId;
-                    self.dataMap.notes[doc._id].createdAt = doc.createdAt;
 
                     const bookData = await disposable.books.get(doc.bookId);
                     if (bookData && bookData?.name) {
@@ -79,17 +77,19 @@ const self = (module.exports = {
                 );
                 try {
                     const currentNote = await db.notes.get(noteId);
-                    await db.notes.put({
-                        _id: noteId,
-                        _rev: currentNote._rev,
-                        updatedAt: Date.now(),
-                        bookId: diskDataMap.notes[noteId].bookId,
-                        title: diskDataMap.notes[noteId].title,
-                        doctype: "markdown",
-                        createdAt: diskDataMap.notes[noteId].createdAt,
+                    if (currentNote.body !== newBody) {
+                        await db.notes.put({
+                            _id: noteId,
+                            _rev: currentNote._rev,
+                            updatedAt: Date.now(),
+                            bookId: currentNote.bookId,
+                            title: currentNote.title,
+                            doctype: currentNote.doctype,
+                            createdAt: currentNote.createdAt,
 
-                        body: newBody,
-                    });
+                            body: newBody,
+                        });
+                    }
                 } catch (err) {
                     console.warn(
                         `${noteId} restore from plain text failed!`,
