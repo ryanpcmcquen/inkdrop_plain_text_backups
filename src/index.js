@@ -21,12 +21,12 @@ module.exports = {
                 inkdrop.layouts.insertComponentToLayoutAfter(
                     RestoreSidebar.layoutName,
                     "SideBarMenuItemTrash",
-                    RestoreSidebar.componentName
+                    RestoreSidebar.name
                 );
 
                 inkdrop.components.registerClass(RestoreModal);
                 inkdrop.layouts.addComponentToLayout(
-                    "modal",
+                    RestoreModal.layoutName,
                     RestoreModal.name
                 );
 
