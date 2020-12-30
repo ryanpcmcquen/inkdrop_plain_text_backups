@@ -11,7 +11,7 @@ const self = (module.exports = {
         return `${backupPath || self.getBackupPath()}/PLAIN_TEXT`;
     },
     getDataMapPath(plainTextPath) {
-        return `${plainTextPath || self.getPlainTextPath()}/.__DATA_MAP__.json`;
+        return `${plainTextPath || self.getPlainTextPath()}/._DATA_MAP_.json`;
     },
     getNotePath() {},
 
