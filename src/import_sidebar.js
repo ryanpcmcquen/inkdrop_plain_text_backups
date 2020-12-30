@@ -1,15 +1,18 @@
 "use babel";
 
 import * as React from "react";
-import RestoreModal from "./restore_modal";
+import ImportModal from "./import_modal";
 
 // This has to be an 'old-school' function because
 // it relies on the 'name' property.
-class RestoreSidebar extends React.Component {
+class ImportSidebar extends React.Component {
     static layoutName = "sidebar-menu";
 
     handleClick = () => {
-        return <RestoreModal open={true} />;
+        inkdrop.commands.dispatch(
+            document.body,
+            "plain_text_backups:toggle_dialog"
+        );
     };
 
     render() {
@@ -17,17 +20,17 @@ class RestoreSidebar extends React.Component {
 
         return (
             <SideBarMenuItem
-                className="plain_text_backups__restore_sidebar"
+                className="plain_text_backups__import_sidebar"
                 indentLevel={0}
                 onClick={this.handleClick}
                 renderIcon={() => {
                     return <i className="redo icon" />;
                 }}
             >
-                OVERWRITE
+                Import Plain Text
             </SideBarMenuItem>
         );
     }
 }
 
-export default RestoreSidebar;
+export default ImportSidebar;

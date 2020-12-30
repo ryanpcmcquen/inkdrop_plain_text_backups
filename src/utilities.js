@@ -64,7 +64,7 @@ const self = (module.exports = {
         );
     },
 
-    async restoreAll() {
+    async importAll() {
         const plainTextPath = self.getPlainTextPath();
         const diskDataMap = await self.getDataMap(plainTextPath);
         const db = inkdrop.main.dataStore.getLocalDB();
@@ -77,6 +77,7 @@ const self = (module.exports = {
                 );
                 try {
                     const currentNote = await db.notes.get(noteId);
+                    // Don't bother if there are no changes:
                     if (currentNote.body !== newBody) {
                         await db.notes.put({
                             _id: noteId,
@@ -92,7 +93,7 @@ const self = (module.exports = {
                     }
                 } catch (err) {
                     console.warn(
-                        `${noteId} restore from plain text failed!`,
+                        `${noteId} import from plain text failed!`,
                         err
                     );
                 }

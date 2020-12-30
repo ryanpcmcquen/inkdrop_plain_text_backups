@@ -10,3 +10,7 @@
 
 -   Renaming notebooks and notes is now supported.
 -   Lots of under the hood cleanup and async-ifying.
+
+## v0.4.0 - Import support!
+
+-   You can now import existing notes from your PLAIN_TEXT folder.

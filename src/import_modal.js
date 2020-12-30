@@ -1,19 +1,18 @@
 import * as React from "react";
-import { getPlainTextPath, restoreAll } from "./utilities";
+import { getPlainTextPath, importAll } from "./utilities";
 import { CompositeDisposable } from "event-kit";
 
-class RestoreModal extends React.Component {
+class ImportModal extends React.Component {
     static layoutName = "modal";
     subscriptions = new CompositeDisposable();
 
     constructor(props) {
         super(props);
 
-        this.open = false;
-        // Register command that toggles this dialog
+        // Register command that toggles this dialog:
         this.subscriptions.add(
             inkdrop.commands.add(document.body, {
-                "plain_text_backups:toggle-dialog": this.toggle,
+                "plain_text_backups:toggle_dialog": this.toggle,
             })
         );
     }
@@ -30,18 +29,10 @@ class RestoreModal extends React.Component {
     componentWillUnmount() {
         this.subscriptions.dispose();
     }
-    // open() {
-    // if (!this?.dialog?.isShown) {
-    // this?.dialog?.showDialog();
-    // }
-    // }
 
     render() {
         const { MessageDialog } = inkdrop.components.classes;
-        debugger;
-        if (this.props.open) {
-            this.showDialog();
-        }
+
         return (
             <MessageDialog
                 ref={(el) => {
@@ -51,7 +42,7 @@ class RestoreModal extends React.Component {
                 title={() => (
                     <span>
                         <i className="redo icon" />
-                        Restore from plain text backups?
+                        Import from plain text backups?
                     </span>
                 )}
                 buttons={[
@@ -59,10 +50,9 @@ class RestoreModal extends React.Component {
                     { label: "Yes", primary: true },
                 ]}
                 onDismiss={async (caller, buttonIndex) => {
-                    debugger;
                     if (buttonIndex === 1) {
                         // User confirms restoration:
-                        await restoreAll();
+                        await importAll();
                     } else {
                         // User rejects restoration:
                         return true;
@@ -70,12 +60,19 @@ class RestoreModal extends React.Component {
                 }}
             >
                 <p>
-                    Are you sure you want to restore from your plain text notes
-                    ({getPlainTextPath()})?
+                    Are you sure you want to import from your plain text notes?
+                    <br />
+                    <br />
+                    Located at: <code>{getPlainTextPath()}</code>
+                    <br />
+                    <br />
+                    <strong>WARNING:</strong> This will overwrite existing data
+                    with data from your plain text notes and COULD RESULT IN
+                    DATA LOSS.
                 </p>
             </MessageDialog>
         );
     }
 }
 
-export default RestoreModal;
+export default ImportModal;

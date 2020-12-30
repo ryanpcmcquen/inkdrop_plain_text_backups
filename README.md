@@ -15,3 +15,13 @@ A full backup is done on the initial app launch or activation, after that, chang
 Now with renaming support!
 
 ![Renaming demo](assets/inkdrop_plain_text_backups_renaming_demo.gif)
+
+And import support!
+
+![Import demo](assets/inkdrop_plain_text_backups_import_demo.gif)
+
+## Known limitations:
+
+-   **Inkdrop must be running before modification** of files in the _PLAIN_TEXT_ directory, because all notes are backed up on app launch.
+-   Renaming of files or folders inside of the _PLAIN_TEXT_ directory is not supported at this time.
+-   File creation inside of the _PLAIN_TEXT_ directory is not supported at this time.
