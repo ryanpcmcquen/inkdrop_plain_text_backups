@@ -1,6 +1,6 @@
 # Inkdrop plain text backups
 
-Plain text backups for Inkdrop.
+Plain text backups and import for Inkdrop.
 
 For this plugin to function, you must have the Backup Path set in the Inkdrop desktop app.
 
