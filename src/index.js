@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
-import * as RestoreSidebar from "./restore_sidebar";
+import ImportSidebar from "./import_sidebar";
+import ImportModal from "./import_modal";
 import utilities from "./utilities";
 
 module.exports = {
@@ -16,12 +17,17 @@ module.exports = {
                 );
                 await utilities.writeMaps(plainTextPath, utilities.dataMap);
 
-                inkdrop.components.registerClass(RestoreSidebar.default);
-
+                inkdrop.components.registerClass(ImportSidebar);
                 inkdrop.layouts.insertComponentToLayoutAfter(
-                    RestoreSidebar.layoutName,
+                    ImportSidebar.layoutName,
                     "SideBarMenuItemTrash",
-                    RestoreSidebar.componentName
+                    ImportSidebar.name
+                );
+
+                inkdrop.components.registerClass(ImportModal);
+                inkdrop.layouts.addComponentToLayout(
+                    ImportModal.layoutName,
+                    ImportModal.name
                 );
 
                 // Sync stuff on changes:
@@ -107,7 +113,15 @@ module.exports = {
             if (this.disposable) {
                 this.disposable.dispose();
             }
-            inkdrop.components.deleteClass(RestoreSidebar.default);
+
+            inkdrop.components.deleteClass(ImportSidebar);
+            inkdrop.layouts.removeComponentFromLayout(
+                ImportSidebar.layoutName,
+                ImportSidebar.name
+            );
+
+            inkdrop.components.deleteClass(ImportModal);
+            layouts.removeComponentFromLayout("modal", ImportModal.name);
         }
     },
 };
