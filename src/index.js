@@ -40,12 +40,13 @@ module.exports = {
                                 const bookPath = `${plainTextPath}/${
                                     utilities.dataMap.books[change.doc.bookId]
                                 }`;
-
+                                if (!utilities.dataMap.notes[change.id]) {
+                                    utilities.dataMap.notes[change.id] = {};
+                                }
                                 // If the title has changed, rename the old note.
                                 if (
                                     change?.doc?.title &&
-                                    utilities.dataMap.notes?.[change.id]
-                                        ?.title &&
+                                    utilities.dataMap.notes[change.id]?.title &&
                                     change.doc.title !==
                                         utilities.dataMap.notes[change.id].title
                                 ) {
