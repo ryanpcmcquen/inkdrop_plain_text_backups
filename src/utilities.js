@@ -75,8 +75,10 @@ const self = (module.exports = {
                     diskDataMap.notes[noteId].path,
                     "utf8"
                 );
+
                 try {
                     const currentNote = await db.notes.get(noteId);
+
                     // Don't bother if there are no changes:
                     if (currentNote.body !== newBody) {
                         await db.notes.put({
