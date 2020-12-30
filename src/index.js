@@ -44,6 +44,8 @@ module.exports = {
                                 // If the title has changed, rename the old note.
                                 if (
                                     change?.doc?.title &&
+                                    utilities.dataMap.notes?.[change.id]
+                                        ?.title &&
                                     change.doc.title !==
                                         utilities.dataMap.notes[change.id].title
                                 ) {
