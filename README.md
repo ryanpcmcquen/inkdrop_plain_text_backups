@@ -23,5 +23,5 @@ And import support!
 ## Known limitations:
 
 -   **Inkdrop must be running before modification** of files in the _PLAIN_TEXT_ directory, because all notes are backed up on app launch.
--   Renaming of files or folders inside of the _PLAIN_TEXT_ directory is not supported at this time.
--   File creation inside of the _PLAIN_TEXT_ directory is not supported at this time.
+-   Renaming of files or folders inside of the _PLAIN_TEXT_ directory is not supported at this time, please rename inside of Inkdrop.
+-   File creation inside of the _PLAIN_TEXT_ directory is not supported at this time, please create files inside of Inkdrop.
