@@ -11,7 +11,7 @@ const self = (module.exports = {
         return `${backupPath || self.getBackupPath()}/PLAIN_TEXT`;
     },
     getDataMapPath(plainTextPath) {
-        return `${plainTextPath || self.getPlainTextPath()}/._DATA_MAP_.json`;
+        return `${plainTextPath || self.getPlainTextPath()}/.inkdrop_plain_text_backups/__DATA_MAP__.json`;
     },
     getNotePath() {},
 
@@ -56,10 +56,11 @@ const self = (module.exports = {
         });
     },
     async writeMaps(plainTextPath, maps) {
-        await fs.mkdir(plainTextPath, { recursive: true });
+        const dataMapPath = self.getDataMapPath(plainTextPath);
+        await fs.mkdir(path.dirname(dataMapPath), { recursive: true });
 
         await fs.writeFile(
-            self.getDataMapPath(plainTextPath),
+            dataMapPath,
             JSON.stringify(maps)
         );
     },
