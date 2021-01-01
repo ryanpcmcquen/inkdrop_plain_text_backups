@@ -64,12 +64,14 @@ module.exports = {
 
                                 utilities.dataMap.notes[change.id].title =
                                     change.doc.title;
-                                utilities.dataMap.notes[
-                                    change.id
-                                ].path = `${bookPath}/${change.doc.title}.md`;
+                                utilities.dataMap.notes[change.id].path = `${
+                                    utilities.dataMap.books[change.doc.bookId]
+                                }/${change.doc.title}.md`;
 
                                 await utilities.writeNote(
-                                    utilities.dataMap.notes[change.id].path,
+                                    `${plainTextPath}/${
+                                        utilities.dataMap.notes[change.id].path
+                                    }`,
                                     change.doc.body
                                 );
                                 await utilities.writeMaps(

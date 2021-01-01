@@ -11,7 +11,9 @@ const self = (module.exports = {
         return `${backupPath || self.getBackupPath()}/PLAIN_TEXT`;
     },
     getDataMapPath(plainTextPath) {
-        return `${plainTextPath || self.getPlainTextPath()}/.inkdrop_plain_text_backups/__DATA_MAP__.json`;
+        return `${
+            plainTextPath || self.getPlainTextPath()
+        }/.inkdrop_plain_text_backups/__DATA_MAP__.json`;
     },
     getNotePath() {},
 
@@ -42,10 +44,12 @@ const self = (module.exports = {
                         self.dataMap.books[doc.bookId] = bookData.name;
                         self.dataMap.notes[
                             doc._id
-                        ].path = `${plainTextPath}/${bookData.name}/${doc.title}.md`;
+                        ].path = `${bookData.name}/${doc.title}.md`;
 
                         await self.writeNote(
-                            self.dataMap.notes[doc._id].path,
+                            `${plainTextPath}/${
+                                self.dataMap.notes[doc._id].path
+                            }`,
                             doc.body
                         );
                     }
@@ -59,10 +63,7 @@ const self = (module.exports = {
         const dataMapPath = self.getDataMapPath(plainTextPath);
         await fs.mkdir(path.dirname(dataMapPath), { recursive: true });
 
-        await fs.writeFile(
-            dataMapPath,
-            JSON.stringify(maps)
-        );
+        await fs.writeFile(dataMapPath, JSON.stringify(maps));
     },
 
     async importAll() {
@@ -73,7 +74,7 @@ const self = (module.exports = {
         await Promise.all(
             await Object.keys(diskDataMap.notes).map(async (noteId) => {
                 const newBody = await fs.readFile(
-                    diskDataMap.notes[noteId].path,
+                    `${plainTextPath}/${diskDataMap.notes[noteId].path}`,
                     "utf8"
                 );
 
