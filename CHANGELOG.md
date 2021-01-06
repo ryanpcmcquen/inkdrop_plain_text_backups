@@ -14,3 +14,7 @@
 ## v0.4.0 - Import support!
 
 -   You can now import existing notes from your PLAIN_TEXT folder.
+
+## v0.5.0 - Add support for sub notebooks!
+
+-   Sub notebooks will now back up with correct paths.
