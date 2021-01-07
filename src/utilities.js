@@ -27,6 +27,22 @@ const self = (module.exports = {
         await fs.mkdir(path.dirname(notePath), { recursive: true });
         await fs.writeFile(notePath, body);
     },
+    async getBookPath(disposable, doc) {
+        let bookPath = doc.name;
+        if (doc.parentBookId) {
+            let hasParent = true;
+            while (hasParent) {
+                var parentBookData = await disposable.books.get(
+                    parentBookData
+                        ? parentBookData.parentBookId
+                        : doc.parentBookId
+                );
+                bookPath = `${parentBookData.name}/${bookPath}`;
+                hasParent = Boolean(parentBookData.parentBookId);
+            }
+        }
+        return bookPath;
+    },
     async getDataAndWriteAllNotes(disposable, plainTextPath) {
         // Sync everything one time:
         const allNotes = await disposable.notes.all();
@@ -42,23 +58,12 @@ const self = (module.exports = {
                     const bookData = await disposable.books.get(doc.bookId);
 
                     if (bookData) {
-                        let bookPath = bookData.name;
-                        if (bookData.parentBookId) {
-                            let hasParent = true;
-                            while (hasParent) {
-                                var parentBookData = await disposable.books.get(
-                                    parentBookData
-                                        ? parentBookData.parentBookId
-                                        : bookData.parentBookId
-                                );
-                                bookPath = `${parentBookData.name}/${bookPath}`;
-                                hasParent = Boolean(
-                                    parentBookData.parentBookId
-                                );
-                            }
-                        }
+                        let bookPath = await self.getBookPath(
+                            disposable,
+                            bookData
+                        );
 
-                        self.dataMap.books[doc.bookId] = bookData.name;
+                        self.dataMap.books[doc.bookId] = bookPath;
                         self.dataMap.notes[
                             doc._id
                         ].path = `${bookPath}/${doc.title}.md`;
@@ -72,8 +77,11 @@ const self = (module.exports = {
                     }
                 })
             );
-
-            resolve(self.dataMap);
+            if (self.dataMap) {
+                resolve(self.dataMap);
+            } else {
+                reject(self);
+            }
         });
     },
     async writeMaps(plainTextPath, maps) {
@@ -89,7 +97,7 @@ const self = (module.exports = {
         const db = inkdrop.main.dataStore.getLocalDB();
 
         await Promise.all(
-            await Object.keys(diskDataMap.notes).map(async (noteId) => {
+            Object.keys(diskDataMap.notes).map(async (noteId) => {
                 const newBody = await fs.readFile(
                     `${plainTextPath}/${diskDataMap.notes[noteId].path}`,
                     "utf8"

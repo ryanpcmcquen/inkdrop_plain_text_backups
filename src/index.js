@@ -2,6 +2,7 @@ import { promises as fs } from "fs";
 import ImportSidebar from "./import_sidebar";
 import ImportModal from "./import_modal";
 import utilities from "./utilities";
+import * as path from "path";
 
 module.exports = {
     disposable: null,
@@ -81,10 +82,19 @@ module.exports = {
 
                                 break;
                             case "book":
+                                debugger;
+                                console.log(utilities.dataMap.books[change.id]);
+                                console.log(
+                                    path.basename(
+                                        utilities.dataMap.books[change.id]
+                                    )
+                                );
                                 if (
                                     change?.doc?.name &&
                                     change.doc.name !==
-                                        utilities.dataMap.books[change.id]
+                                        path.basename(
+                                            utilities.dataMap.books[change.id]
+                                        )
                                 ) {
                                     const oldDataMap = await utilities.getDataMap(
                                         plainTextPath
@@ -97,8 +107,14 @@ module.exports = {
                                         `${plainTextPath}/${change.doc.name}`
                                     );
 
-                                    utilities.dataMap.books[change.id] =
-                                        change.doc.name;
+                                    let bookPath = await utilities.getBookPath(
+                                        this.disposable,
+                                        change.doc
+                                    );
+
+                                    utilities.dataMap.books[
+                                        change.id
+                                    ] = bookPath;
 
                                     await utilities.writeMaps(
                                         plainTextPath,
