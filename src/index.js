@@ -82,14 +82,8 @@ module.exports = {
 
                                 break;
                             case "book":
-                                debugger;
-                                console.log(utilities.dataMap.books[change.id]);
-                                console.log(
-                                    path.basename(
-                                        utilities.dataMap.books[change.id]
-                                    )
-                                );
                                 if (
+                                    utilities?.dataMap?.books[change.id] &&
                                     change?.doc?.name &&
                                     change.doc.name !==
                                         path.basename(
