@@ -96,6 +96,73 @@ const self = (module.exports = {
         const diskDataMap = await self.getDataMap(plainTextPath);
         const db = inkdrop.main.dataStore.getLocalDB();
 
+        // let allDirectories = [];
+        // const getDirectories = async (baseDir) => {
+        //     console.log(baseDir);
+        //     const directories = await fs.readdir(baseDir, {
+        //         withFileTypes: true,
+        //     });
+        //     console.log(directories);
+        //     debugger;
+        //     await Promise.all(
+        //         directories.map(async (dir) => {
+        //             allDirectories.push(
+        //                 await getDirectories(path.join(baseDir, dir.name))
+        //             );
+        //         })
+        //     );
+        //     console.log(allDirectories);
+        //     debugger;
+
+        //     // const allDirectories = directories
+        //     //     .filter((dir) => dir.isDirectory())
+        //     //     .map((dir) => {
+        //     //         const dirPath = path.join(baseDir, dir.name);
+        //     //         // const relativePath = path.join(base, file.name);
+        //     //         // debugger;
+        //     //         // console.log("dirs:");
+        //     //         // console.log(dirs);
+        //     //         if (dir.isDirectory()) {
+        //     //             return getDirectories(dirPath);
+        //     //         } else {
+        //     //             return dirPath;
+        //     //         }
+        //     //         //  else if (file.isFile()) {
+        //     //         //     file.__fullPath = filePath;
+        //     //         //     // file.__relateivePath = relativePath;
+        //     //         //     return files.concat(file);
+        //     //         // }
+        //     //     });
+        //     // console.log(allDirectories);
+        //     return allDirectories;
+        // };
+
+        // const getDirectories = async (source) => {
+        //     const allDirectories = await fs.readdir(source, {
+        //         withFileTypes: true,
+        //     });
+
+        //     return allDirectories
+        //         .filter((dirent) => dirent.isDirectory())
+        //         .map((dirent) => dirent.name);
+        // };
+        // const allDirectories = await getDirectories(plainTextPath);
+        // console.log(allDirectories);
+
+        const dirs = async (sourcePath) => {
+            let dirs = [];
+            for (const file of await fs.readdir(sourcePath)) {
+                if (
+                    (await fs.stat(path.join(sourcePath, file))).isDirectory()
+                ) {
+                    dirs = [...dirs, file];
+                }
+            }
+            return dirs;
+        };
+        console.log(await dirs(plainTextPath));
+        debugger;
+
         await Promise.all(
             Object.keys(diskDataMap.notes).map(async (noteId) => {
                 const newBody = await fs.readFile(
