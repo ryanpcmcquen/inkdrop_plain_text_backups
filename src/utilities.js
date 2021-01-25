@@ -1,8 +1,8 @@
-import { promises as fs } from "fs";
+import * as fs from "fs";
 import * as path from "path";
 
 const self = (module.exports = {
-    dataMap: { books: {}, notes: {} },
+    dataMap: { books: {}, notes: {}, tree: [] },
 
     getBackupPath() {
         return inkdrop.config.get().core.db.backupPath;
@@ -19,13 +19,16 @@ const self = (module.exports = {
 
     async getDataMap(plainTextPath) {
         return JSON.parse(
-            await fs.readFile(self.getDataMapPath(plainTextPath), "utf8")
+            await fs.promises.readFile(
+                self.getDataMapPath(plainTextPath),
+                "utf-8"
+            )
         );
     },
 
     async writeNote(notePath, body) {
-        await fs.mkdir(path.dirname(notePath), { recursive: true });
-        await fs.writeFile(notePath, body);
+        await fs.promises.mkdir(path.dirname(notePath), { recursive: true });
+        await fs.promises.writeFile(notePath, body);
     },
     async getBookPath(disposable, doc) {
         let bookPath = doc.name;
@@ -84,33 +87,67 @@ const self = (module.exports = {
             }
         });
     },
-    async getDirectories(source) {
-        const allDirectories = await fs.readdir(source, {
+    treePaths: [],
+    currentDir: "",
+    async getTree(source) {
+        const initialRead = await fs.promises.readdir(source, {
             withFileTypes: true,
         });
 
-        return allDirectories
+        return initialRead
             .filter((dirent) => {
-                return dirent.isDirectory();
+                return (
+                    dirent.isDirectory() ||
+                    // We could support more than Markdown in the future.
+                    (dirent.isFile() && /\.md$/.test(dirent.name))
+                );
             })
             .map(async (dirent) => {
-                const subDirents = await Promise.all(
-                    await self.getDirectories(path.join(source, dirent.name))
-                );
-                return {
-                    directory: dirent.name,
-                    sub_directories: subDirents,
-                };
+                if (dirent.isDirectory()) {
+                    self.currentDir += dirent.name;
+                    const subDirents = await Promise.all(
+                        await self.getTree(path.join(source, dirent.name))
+                    );
+                    return {
+                        directory: dirent.name,
+                        children: subDirents,
+                    };
+                } else {
+                    self.treePaths.push(`${self.currentDir}/${dirent.name}`);
+                    self.currentDir = "";
+
+                    return {
+                        file: dirent.name,
+                        exists: false,
+                    };
+                }
             });
     },
-    async writeMaps(plainTextPath, maps) {
-        maps.directories = await Promise.all(
-            await self.getDirectories(plainTextPath)
-        );
-        const dataMapPath = self.getDataMapPath(plainTextPath);
-        await fs.mkdir(path.dirname(dataMapPath), { recursive: true });
+    getAllFiles: (dirPath, arrayOfFiles) => {
+        const files = fs.readdirSync(dirPath);
 
-        await fs.writeFile(dataMapPath, JSON.stringify(maps));
+        arrayOfFiles = arrayOfFiles || [];
+
+        files.forEach(function (file) {
+            const filePath = `${dirPath}/${file}`;
+            if (fs.statSync(filePath).isDirectory()) {
+                arrayOfFiles = self.getAllFiles(filePath, arrayOfFiles);
+            } else if (/\.md$/.test(file)) {
+                // arrayOfFiles.push(path.join(__dirname, dirPath, "/", file));
+                arrayOfFiles.push(filePath);
+            }
+        });
+
+        return arrayOfFiles;
+    },
+    async writeMaps(plainTextPath, maps) {
+        maps.tree = await Promise.all(await self.getTree(plainTextPath));
+        console.log(self.getAllFiles(plainTextPath));
+        // console.log(self.treePaths);
+        const dataMapPath = self.getDataMapPath(plainTextPath);
+        await fs.promises.mkdir(path.dirname(dataMapPath), { recursive: true });
+
+        await fs.promises.writeFile(dataMapPath, JSON.stringify(maps));
     },
 
     async importAll() {
@@ -118,15 +155,14 @@ const self = (module.exports = {
         const diskDataMap = await self.getDataMap(plainTextPath);
         const db = inkdrop.main.dataStore.getLocalDB();
 
-        const allDirectories = await Promise.all(
-            await self.getDirectories(plainTextPath)
-        );
+        const tree = await Promise.all(await self.getTree(plainTextPath));
+        // console.log(self.treePaths);
 
         await Promise.all(
             Object.keys(diskDataMap.notes).map(async (noteId) => {
-                const newBody = await fs.readFile(
+                const newBody = await fs.promises.readFile(
                     `${plainTextPath}/${diskDataMap.notes[noteId].path}`,
-                    "utf8"
+                    "utf-8"
                 );
 
                 try {
