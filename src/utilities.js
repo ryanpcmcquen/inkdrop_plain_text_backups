@@ -124,7 +124,6 @@ const self = (module.exports = {
             Object.keys(diskDataMap.notes).map(async (noteId) => {
                 const filePath = `${plainTextPath}/${diskDataMap.notes[noteId].path}`;
                 const fileTreeIndex = tree.indexOf(filePath);
-                console.log(filePath);
                 if (fileTreeIndex > -1) {
                     tree.splice(fileTreeIndex, 1);
                 }
@@ -159,8 +158,6 @@ const self = (module.exports = {
         const prunedTree = tree.filter((filePath) => {
             return !new RegExp(`${plainTextPath}/undefined/`).test(filePath);
         });
-
-        console.log(tree, prunedTree);
 
         await Promise.all(
             prunedTree.map(async (newNotePath) => {
