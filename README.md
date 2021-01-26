@@ -22,10 +22,10 @@ And import support!
 
 And file creation support!
 
-![File creation demo](assets/inkdrop_plain_text_backups_file_creation_demo.gif)
+![Note creation demo](assets/inkdrop_plain_text_backups_note_creation_demo.gif)
 
 ## Known limitations:
 
 -   **Inkdrop must be running before modification** of files in the _PLAIN_TEXT_ directory, because all notes are backed up on app launch.
 -   Renaming of files or folders inside of the _PLAIN_TEXT_ directory is not supported at this time, please rename inside of Inkdrop.
--   File creation inside of the _PLAIN_TEXT_ directory is now supported! But, note that Notebooks are matched to files using `findByName`, which could result in the external note being imported into the wrong Notebook _if_ you have multiple Notebooks of the same name.
+-   Note creation inside of the _PLAIN_TEXT_ directory is now supported! But, Notebooks are matched to files using `findByName`, which could result in the external note being imported into the wrong Notebook _if_ you have multiple Notebooks of the same name. Also, creating folders inside of the _PLAIN_TEXT_ directory will not create Notebooks.
