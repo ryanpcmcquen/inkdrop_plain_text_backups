@@ -48,48 +48,52 @@ const self = (module.exports = {
                                         utilities.dataMap.notes[change.id] = {};
                                     }
                                     // If the title has changed, rename the old note.
-                                    if (
-                                        change?.doc?.title &&
-                                        utilities.dataMap.notes[change.id]
-                                            ?.title &&
-                                        change.doc.title !==
+                                    if (change?.doc?.title) {
+                                        if (
                                             utilities.dataMap.notes[change.id]
-                                                .title
-                                    ) {
-                                        const oldDataMap = await utilities.getDataMap(
-                                            plainTextPath
-                                        );
+                                                ?.title &&
+                                            change.doc.title !==
+                                                utilities.dataMap.notes[
+                                                    change.id
+                                                ].title
+                                        ) {
+                                            const oldDataMap = await utilities.getDataMap(
+                                                plainTextPath
+                                            );
 
-                                        await fs.rename(
-                                            `${bookPath}/${
-                                                oldDataMap.notes[change.id]
-                                                    .title
-                                            }.md`,
-                                            `${bookPath}/${change.doc.title}.md`
+                                            await fs.rename(
+                                                `${bookPath}/${
+                                                    oldDataMap.notes[change.id]
+                                                        .title
+                                                }.md`,
+                                                `${bookPath}/${change.doc.title}.md`
+                                            );
+                                        }
+
+                                        utilities.dataMap.notes[
+                                            change.id
+                                        ].title = change.doc.title;
+                                        utilities.dataMap.notes[
+                                            change.id
+                                        ].path = `${
+                                            utilities.dataMap.books[
+                                                change.doc.bookId
+                                            ]
+                                        }/${change.doc.title}.md`;
+
+                                        await utilities.writeNote(
+                                            `${plainTextPath}/${
+                                                utilities.dataMap.notes[
+                                                    change.id
+                                                ].path
+                                            }`,
+                                            change.doc.body
+                                        );
+                                        await utilities.writeMaps(
+                                            plainTextPath,
+                                            utilities.dataMap
                                         );
                                     }
-
-                                    utilities.dataMap.notes[change.id].title =
-                                        change.doc.title;
-                                    utilities.dataMap.notes[
-                                        change.id
-                                    ].path = `${
-                                        utilities.dataMap.books[
-                                            change.doc.bookId
-                                        ]
-                                    }/${change.doc.title}.md`;
-
-                                    await utilities.writeNote(
-                                        `${plainTextPath}/${
-                                            utilities.dataMap.notes[change.id]
-                                                .path
-                                        }`,
-                                        change.doc.body
-                                    );
-                                    await utilities.writeMaps(
-                                        plainTextPath,
-                                        utilities.dataMap
-                                    );
 
                                     break;
                                 case "book":
