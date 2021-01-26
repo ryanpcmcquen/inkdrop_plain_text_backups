@@ -1,7 +1,6 @@
 "use babel";
 
 import * as React from "react";
-import ImportModal from "./import_modal";
 
 // This has to be an 'old-school' function because
 // it relies on the 'name' property.

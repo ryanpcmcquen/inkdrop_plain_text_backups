@@ -3,6 +3,7 @@ import * as path from "path";
 
 const self = (module.exports = {
     dataMap: { books: {}, notes: {}, tree: [] },
+    disposable: null,
 
     getBackupPath() {
         return inkdrop.config.get().core.db.backupPath;
@@ -96,7 +97,7 @@ const self = (module.exports = {
             const filePath = `${dirPath}/${file}`;
             if (fs.statSync(filePath).isDirectory()) {
                 arrayOfFiles = self.getTree(filePath, arrayOfFiles);
-            } else if (/\.md$/.test(file)) {
+            } else if (path.extname(file) === ".md") {
                 arrayOfFiles.push(filePath);
             }
         });
@@ -114,7 +115,8 @@ const self = (module.exports = {
     async importAll() {
         const plainTextPath = self.getPlainTextPath();
         const diskDataMap = await self.getDataMap(plainTextPath);
-        const db = inkdrop.main.dataStore.getLocalDB();
+        self.disposable =
+            self.disposable || inkdrop.main.dataStore.getLocalDB();
 
         const tree = self.getTree(plainTextPath);
 
@@ -122,17 +124,18 @@ const self = (module.exports = {
             Object.keys(diskDataMap.notes).map(async (noteId) => {
                 const filePath = `${plainTextPath}/${diskDataMap.notes[noteId].path}`;
                 const fileTreeIndex = tree.indexOf(filePath);
+                console.log(filePath);
                 if (fileTreeIndex > -1) {
                     tree.splice(fileTreeIndex, 1);
                 }
                 const newBody = await fs.promises.readFile(filePath, "utf-8");
 
                 try {
-                    const currentNote = await db.notes.get(noteId);
+                    const currentNote = await self.disposable.notes.get(noteId);
 
                     // Don't bother if there are no changes:
                     if (currentNote.body !== newBody) {
-                        await db.notes.put({
+                        await self.disposable.notes.put({
                             _id: noteId,
                             _rev: currentNote._rev,
                             updatedAt: Date.now(),
@@ -151,25 +154,52 @@ const self = (module.exports = {
                 }
             })
         );
-        console.log(tree);
+
+        // Remove 'Trash' files from the tree:
+        const prunedTree = tree.filter((filePath) => {
+            return !new RegExp(`${plainTextPath}/undefined/`).test(filePath);
+        });
+
+        console.log(tree, prunedTree);
 
         await Promise.all(
-            tree.map(async (newNotePath) => {
-                return false;
-                const newNoteId = db.notes.createId();
-                await db.notes.put({
-                    _id: newNoteId,
-                    // _rev: currentNote._rev,
-                    updatedAt: Date.now(),
-                    bookId: currentNote.bookId,
-                    title: path.basename(newNotePath),
-                    // doctype: currentNote.doctype,
-                    createdAt: Date.now(),
-                    // body: ,
-                });
+            prunedTree.map(async (newNotePath) => {
+                const bookPathArray = path
+                    .dirname(newNotePath)
+                    .replace(new RegExp(`^${plainTextPath}/`), "")
+                    .split("/");
+                // This is a best guess because it uses the name,
+                // if there is another notebook with the same
+                // exact name this may return the
+                // 'wrong' one.
+                const bookDoc = await self.disposable.books.findWithName(
+                    bookPathArray.pop()
+                );
+                if (bookDoc && bookDoc._id) {
+                    const newBody = await fs.promises.readFile(
+                        newNotePath,
+                        "utf-8"
+                    );
+
+                    const newNoteId = self.disposable.notes.createId();
+                    await self.disposable.notes.put({
+                        _id: newNoteId,
+                        updatedAt: Date.now(),
+                        bookId: bookDoc._id,
+                        title: path
+                            .basename(newNotePath)
+                            .replace(
+                                new RegExp(`${path.extname(newNotePath)}$`),
+                                ""
+                            ),
+                        doctype: "markdown",
+                        createdAt: Date.now(),
+                        body: newBody,
+                    });
+                }
             })
         );
 
-        db.dispose();
+        await self.writeMaps(plainTextPath, self.dataMap);
     },
 });

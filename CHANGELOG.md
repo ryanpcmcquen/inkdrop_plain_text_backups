@@ -18,3 +18,8 @@
 ## v0.5.0 - Add support for sub notebooks!
 
 -   Sub notebooks will now back up with correct paths.
+
+## v0.6.0 - File creation inside of the PLAIN_TEXT folder works!
+
+-   You can now create files inside of PLAIN_TEXT and they will be picked up by imports.
+    -   Caveat: This utilizes the internal `findByName` to match Notebook names to folders, so if you have two notebooks of the same name, the imported note may not end up in the one you want.
