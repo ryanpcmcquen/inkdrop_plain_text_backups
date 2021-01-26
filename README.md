@@ -29,3 +29,4 @@ And note creation support!
 -   **Inkdrop must be running before modification** of files in the _PLAIN_TEXT_ directory, because all notes are backed up on app launch.
 -   Renaming of files or folders inside of the _PLAIN_TEXT_ directory is not supported at this time, please rename inside of Inkdrop.
 -   Note creation inside of the _PLAIN_TEXT_ directory is now supported! But, Notebooks are matched to files using `findByName`, which could result in the external note being imported into the wrong Notebook _if_ you have multiple Notebooks of the same name. Also, creating folders inside of the _PLAIN_TEXT_ directory will not create Notebooks.
+-   Moving and deleting files is not synced to the _PLAIN_TEXT_ directory. This plugin takes a hands off approach to avoid data loss.
