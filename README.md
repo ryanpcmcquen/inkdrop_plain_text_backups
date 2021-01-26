@@ -22,7 +22,7 @@ And import support!
 
 And file creation support!
 
-![File creation demo](assets/plain_text_backups_file_creation_demo.gif)
+![File creation demo](assets/inkdrop_plain_text_backups_file_creation_demo.gif)
 
 ## Known limitations:
 
