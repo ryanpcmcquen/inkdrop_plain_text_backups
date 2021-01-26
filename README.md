@@ -20,7 +20,7 @@ And import support!
 
 ![Import demo](assets/inkdrop_plain_text_backups_import_demo.gif)
 
-And file creation support!
+And note creation support!
 
 ![Note creation demo](assets/inkdrop_plain_text_backups_note_creation_demo.gif)
 
