@@ -20,6 +20,10 @@ And import support!
 
 ![Import demo](assets/inkdrop_plain_text_backups_import_demo.gif)
 
+And file creation support!
+
+![File creation demo](assets/plain_text_backups_file_creation_demo.gif)
+
 ## Known limitations:
 
 -   **Inkdrop must be running before modification** of files in the _PLAIN_TEXT_ directory, because all notes are backed up on app launch.
