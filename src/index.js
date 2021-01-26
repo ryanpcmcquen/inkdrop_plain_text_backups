@@ -5,16 +5,16 @@ import utilities from "./utilities";
 import * as path from "path";
 
 const self = (module.exports = {
-    disposable: null,
+    localDb: null,
     async activate() {
         if (inkdrop && !inkdrop.isMobile) {
             const backupPath = utilities.getBackupPath();
             if (backupPath) {
                 const plainTextPath = utilities.getPlainTextPath(backupPath);
-                self.disposable =
-                    self.disposable || inkdrop.main.dataStore.getLocalDB();
+                self.localDb =
+                    self.localDb || inkdrop.main.dataStore.getLocalDB();
                 await utilities.getDataAndWriteAllNotes(
-                    self.disposable,
+                    self.localDb,
                     plainTextPath
                 );
                 await utilities.writeMaps(plainTextPath, utilities.dataMap);
@@ -33,7 +33,7 @@ const self = (module.exports = {
                 );
                 try {
                     // Sync stuff on changes:
-                    self.disposable.onChange(async (change) => {
+                    self.localDb.onChange(async (change) => {
                         try {
                             const typeOfChange = change.id.split(":")[0];
 
@@ -115,7 +115,7 @@ const self = (module.exports = {
                                         );
 
                                         let bookPath = await utilities.getBookPath(
-                                            self.disposable,
+                                            self.localDb,
                                             change.doc
                                         );
 
@@ -146,8 +146,8 @@ const self = (module.exports = {
 
     deactivate() {
         if (inkdrop && !inkdrop.isMobile) {
-            if (self.disposable) {
-                self.disposable.dispose();
+            if (self.localDb) {
+                self.localDb.dispose();
             }
 
             inkdrop.components.deleteClass(ImportSidebar);

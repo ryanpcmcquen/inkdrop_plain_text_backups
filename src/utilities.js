@@ -3,7 +3,7 @@ import * as path from "path";
 
 const self = (module.exports = {
     dataMap: { books: {}, notes: {}, tree: [] },
-    disposable: null,
+    localDb: null,
 
     getBackupPath() {
         return inkdrop.config.get().core.db.backupPath;
@@ -31,12 +31,12 @@ const self = (module.exports = {
         await fs.promises.mkdir(path.dirname(notePath), { recursive: true });
         await fs.promises.writeFile(notePath, body);
     },
-    async getBookPath(disposable, doc) {
+    async getBookPath(localDb, doc) {
         let bookPath = doc.name;
         if (doc.parentBookId) {
             let hasParent = true;
             while (hasParent) {
-                var parentBookData = await disposable.books.get(
+                var parentBookData = await localDb.books.get(
                     parentBookData
                         ? parentBookData.parentBookId
                         : doc.parentBookId
@@ -47,9 +47,9 @@ const self = (module.exports = {
         }
         return bookPath;
     },
-    async getDataAndWriteAllNotes(disposable, plainTextPath) {
+    async getDataAndWriteAllNotes(localDb, plainTextPath) {
         // Sync everything one time:
-        const allNotes = await disposable.notes.all();
+        const allNotes = await localDb.notes.all();
 
         return new Promise(async (resolve, reject) => {
             await Promise.all(
@@ -59,11 +59,11 @@ const self = (module.exports = {
                     }
                     self.dataMap.notes[doc._id].title = doc.title;
 
-                    const bookData = await disposable.books.get(doc.bookId);
+                    const bookData = await localDb.books.get(doc.bookId);
 
                     if (bookData) {
                         let bookPath = await self.getBookPath(
-                            disposable,
+                            localDb,
                             bookData
                         );
 
@@ -115,8 +115,7 @@ const self = (module.exports = {
     async importAll() {
         const plainTextPath = self.getPlainTextPath();
         const diskDataMap = await self.getDataMap(plainTextPath);
-        self.disposable =
-            self.disposable || inkdrop.main.dataStore.getLocalDB();
+        self.localDb = self.localDb || inkdrop.main.dataStore.getLocalDB();
 
         const tree = self.getTree(plainTextPath);
 
@@ -130,11 +129,11 @@ const self = (module.exports = {
                 const newBody = await fs.promises.readFile(filePath, "utf-8");
 
                 try {
-                    const currentNote = await self.disposable.notes.get(noteId);
+                    const currentNote = await self.localDb.notes.get(noteId);
 
                     // Don't bother if there are no changes:
                     if (currentNote.body !== newBody) {
-                        await self.disposable.notes.put({
+                        await self.localDb.notes.put({
                             _id: noteId,
                             _rev: currentNote._rev,
                             updatedAt: Date.now(),
@@ -169,7 +168,7 @@ const self = (module.exports = {
                 // if there is another notebook with the same
                 // exact name this may return the
                 // 'wrong' one.
-                const bookDoc = await self.disposable.books.findWithName(
+                const bookDoc = await self.localDb.books.findWithName(
                     bookPathArray.pop()
                 );
                 if (bookDoc && bookDoc._id) {
@@ -178,8 +177,8 @@ const self = (module.exports = {
                         "utf-8"
                     );
 
-                    const newNoteId = self.disposable.notes.createId();
-                    await self.disposable.notes.put({
+                    const newNoteId = self.localDb.notes.createId();
+                    await self.localDb.notes.put({
                         _id: newNoteId,
                         updatedAt: Date.now(),
                         bookId: bookDoc._id,
