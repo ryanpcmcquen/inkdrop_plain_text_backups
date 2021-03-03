@@ -23,3 +23,7 @@
 
 -   You can now create files inside of PLAIN_TEXT and they will be picked up by imports.
     -   Caveat: This utilizes the internal `findByName` to match Notebook names to folders, so if you have two notebooks of the same name, the imported note may not end up in the one you want.
+
+## v0.7.0 - Moved or trashed files are now deleted from the PLAIN_TEXT directory.
+
+-   This keeps a bunch of crufty files from floating around, but it does introduce the possibility of data loss. It has been tested here, but please report any issues.
