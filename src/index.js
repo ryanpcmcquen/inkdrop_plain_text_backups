@@ -1,4 +1,4 @@
-import { promises as fs } from "fs";
+import * as fs from "fs";
 import ImportSidebar from "./import_sidebar";
 import ImportModal from "./import_modal";
 import utilities from "./utilities";
@@ -36,7 +36,6 @@ const self = (module.exports = {
                     self.localDb.onChange(async (change) => {
                         try {
                             const typeOfChange = change.id.split(":")[0];
-
                             switch (typeOfChange) {
                                 case "note":
                                     const bookPath = `${plainTextPath}/${
@@ -44,6 +43,32 @@ const self = (module.exports = {
                                             change.doc.bookId
                                         ]
                                     }`;
+                                    const notePath = `${bookPath}/${change.doc.title}.md`;
+
+                                    let noteAlreadyExists = false;
+                                    try {
+                                        noteAlreadyExists = await fs.promises.access(
+                                            notePath
+                                        );
+                                    } catch (ignore) {}
+
+                                    // Delete moved or 'trashed' notes.
+                                    if (
+                                        (change.doc.bookId !==
+                                            utilities.dataMap.books[
+                                                change.doc.bookId
+                                            ] &&
+                                            noteAlreadyExists !== false) ||
+                                        change.doc.bookId === "trash"
+                                    ) {
+                                        await fs.promises.unlink(
+                                            `${plainTextPath}/${
+                                                utilities.dataMap.notes[
+                                                    change.id
+                                                ].path
+                                            }`
+                                        );
+                                    }
                                     if (!utilities.dataMap.notes[change.id]) {
                                         utilities.dataMap.notes[change.id] = {};
                                     }
@@ -61,12 +86,12 @@ const self = (module.exports = {
                                                 plainTextPath
                                             );
 
-                                            await fs.rename(
+                                            await fs.promises.rename(
                                                 `${bookPath}/${
                                                     oldDataMap.notes[change.id]
                                                         .title
                                                 }.md`,
-                                                `${bookPath}/${change.doc.title}.md`
+                                                notePath
                                             );
                                         }
 
@@ -111,7 +136,7 @@ const self = (module.exports = {
                                             plainTextPath
                                         );
 
-                                        await fs.rename(
+                                        await fs.promises.rename(
                                             `${plainTextPath}/${
                                                 oldDataMap.books[change.id]
                                             }`,
