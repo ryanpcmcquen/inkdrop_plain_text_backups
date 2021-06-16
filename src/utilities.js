@@ -49,7 +49,7 @@ const self = (module.exports = {
     },
     async getDataAndWriteAllNotes(localDb, plainTextPath) {
         // Sync everything one time:
-        const allNotes = await localDb.notes.all();
+        const allNotes = await localDb.notes.all({ limit: 999999 });
 
         return new Promise(async (resolve, reject) => {
             await Promise.all(
