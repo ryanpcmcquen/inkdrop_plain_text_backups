@@ -4,6 +4,11 @@ import * as path from "path";
 const self = (module.exports = {
     dataMap: { books: {}, notes: {}, tree: [] },
     localDb: null,
+    unsupportedCharacters: {
+        win32: /[<>:"\/\\|\?*]/,
+        linux: /[\/]/,
+        darwin: /[\/]/,
+    },
 
     getBackupPath() {
         return inkdrop.config.get().core.db.backupPath;
@@ -17,6 +22,18 @@ const self = (module.exports = {
         }/.inkdrop_plain_text_backups/__DATA_MAP__.json`;
     },
     getNotePath() {},
+    removeUnsupportedCharacters(fileName) {
+        return fileName.replace(
+            new RegExp(this.unsupportedCharacters[process.platform], "g"),
+            ""
+        );
+    },
+    emptyPlainTextBackupDirectory(plainTextPath) {
+        const directories = fs.readdirSync(plainTextPath);
+        directories.forEach((directory) => {
+            fs.rmdirSync(`${plainTextPath}/${directory}`, { recursive: true });
+        });
+    },
 
     async getDataMap(plainTextPath) {
         return JSON.parse(
@@ -41,7 +58,9 @@ const self = (module.exports = {
                         ? parentBookData.parentBookId
                         : doc.parentBookId
                 );
-                bookPath = `${parentBookData.name}/${bookPath}`;
+                const supportedParentBookName =
+                    self.removeUnsupportedCharacters(parentBookData.name);
+                bookPath = `${supportedParentBookName}/${bookPath}`;
                 hasParent = Boolean(parentBookData.parentBookId);
             }
         }
@@ -49,6 +68,7 @@ const self = (module.exports = {
     },
     async getDataAndWriteAllNotes(localDb, plainTextPath) {
         // Sync everything one time:
+        self.emptyPlainTextBackupDirectory(plainTextPath);
         const allNotes = await localDb.notes.all({ limit: 999999 });
 
         return new Promise(async (resolve, reject) => {
@@ -67,10 +87,12 @@ const self = (module.exports = {
                             bookData
                         );
 
+                        const supportedDocTitle =
+                            self.removeUnsupportedCharacters(doc.title);
                         self.dataMap.books[doc.bookId] = bookPath;
                         self.dataMap.notes[
                             doc._id
-                        ].path = `${bookPath}/${doc.title}.md`;
+                        ].path = `${bookPath}/${supportedDocTitle}.md`;
 
                         await self.writeNote(
                             `${plainTextPath}/${
