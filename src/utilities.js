@@ -1,13 +1,14 @@
 import * as fs from "fs";
 import * as path from "path";
+import * as packageInfo from "../package.json";
 
 const self = (module.exports = {
-    dataMap: { books: {}, notes: {}, tree: [] },
+    dataMap: { version: "", books: {}, notes: {}, tree: [] },
     localDb: null,
     unsupportedCharacters: {
         win32: /[<>:"\/\\|\?*]/,
         linux: /[\/]/,
-        darwin: /[\/]/,
+        darwin: /[:\/]/,
     },
 
     getBackupPath() {
@@ -28,13 +29,6 @@ const self = (module.exports = {
             ""
         );
     },
-    emptyPlainTextBackupDirectory(plainTextPath) {
-        const directories = fs.readdirSync(plainTextPath);
-        directories.forEach((directory) => {
-            fs.rmdirSync(`${plainTextPath}/${directory}`, { recursive: true });
-        });
-    },
-
     async getDataMap(plainTextPath) {
         return JSON.parse(
             await fs.promises.readFile(
@@ -43,13 +37,29 @@ const self = (module.exports = {
             )
         );
     },
+    async migrationRemoveUnsupportedFileNames(plainTextPath) {
+        try {
+            await fs.promises.access(self.getDataMapPath(plainTextPath));
+
+            const tempMap = await self.getDataMap(plainTextPath);
+            if (tempMap && tempMap.version) {
+                return;
+            }
+            const directories = await fs.promises.readdir(plainTextPath);
+            for (const directory of directories) {
+                await fs.promises.rmdir(`${plainTextPath}/${directory}`, {
+                    recursive: true,
+                });
+            }
+        } catch (ignore) {}
+    },
 
     async writeNote(notePath, body) {
         await fs.promises.mkdir(path.dirname(notePath), { recursive: true });
         await fs.promises.writeFile(notePath, body);
     },
     async getBookPath(localDb, doc) {
-        let bookPath = doc.name;
+        let bookPath = self.removeUnsupportedCharacters(doc.name);
         if (doc.parentBookId) {
             let hasParent = true;
             while (hasParent) {
@@ -68,7 +78,8 @@ const self = (module.exports = {
     },
     async getDataAndWriteAllNotes(localDb, plainTextPath) {
         // Sync everything one time:
-        self.emptyPlainTextBackupDirectory(plainTextPath);
+        await self.migrationRemoveUnsupportedFileNames(plainTextPath);
+        self.dataMap.version = packageInfo.version;
         const allNotes = await localDb.notes.all({ limit: 999999 });
 
         return new Promise(async (resolve, reject) => {
