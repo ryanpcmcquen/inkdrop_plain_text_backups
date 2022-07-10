@@ -43,13 +43,16 @@ const self = (module.exports = {
                                             change.doc.bookId
                                         ]
                                     }`;
-                                    const notePath = `${bookPath}/${change.doc.title}.md`;
+                                    const notePath = `${bookPath}/${utilities.removeUnsupportedCharacters(
+                                        change.doc.title
+                                    )}.md`;
 
                                     let noteAlreadyExists = false;
                                     try {
-                                        noteAlreadyExists = await fs.promises.access(
-                                            notePath
-                                        );
+                                        noteAlreadyExists =
+                                            await fs.promises.access(
+                                                `${plainTextPath}/${notePath}`
+                                            );
                                     } catch (ignore) {}
 
                                     // Delete moved or 'trashed' notes.
@@ -82,15 +85,16 @@ const self = (module.exports = {
                                                     change.id
                                                 ].title
                                         ) {
-                                            const oldDataMap = await utilities.getDataMap(
-                                                plainTextPath
-                                            );
+                                            const oldDataMap =
+                                                await utilities.getDataMap(
+                                                    plainTextPath
+                                                );
 
                                             await fs.promises.rename(
-                                                `${bookPath}/${
+                                                `${plainTextPath}/${
                                                     oldDataMap.notes[change.id]
-                                                        .title
-                                                }.md`,
+                                                        .path
+                                                }`,
                                                 notePath
                                             );
                                         }
@@ -104,7 +108,9 @@ const self = (module.exports = {
                                             utilities.dataMap.books[
                                                 change.doc.bookId
                                             ]
-                                        }/${change.doc.title}.md`;
+                                        }/${utilities.removeUnsupportedCharacters(
+                                            change.doc.title
+                                        )}.md`;
 
                                         await utilities.writeNote(
                                             `${plainTextPath}/${
@@ -124,7 +130,9 @@ const self = (module.exports = {
                                 case "book":
                                     if (
                                         utilities?.dataMap?.books[change.id] &&
-                                        change?.doc?.name &&
+                                        utilities.removeUnsupportedCharacters(
+                                            change?.doc?.name
+                                        ) &&
                                         change.doc.name !==
                                             path.basename(
                                                 utilities.dataMap.books[
@@ -132,25 +140,28 @@ const self = (module.exports = {
                                                 ]
                                             )
                                     ) {
-                                        const oldDataMap = await utilities.getDataMap(
-                                            plainTextPath
-                                        );
+                                        const oldDataMap =
+                                            await utilities.getDataMap(
+                                                plainTextPath
+                                            );
 
                                         await fs.promises.rename(
                                             `${plainTextPath}/${
                                                 oldDataMap.books[change.id]
                                             }`,
-                                            `${plainTextPath}/${change.doc.name}`
+                                            `${plainTextPath}/${utilities.removeUnsupportedCharacters(
+                                                change.doc.name
+                                            )}`
                                         );
 
-                                        let bookPath = await utilities.getBookPath(
-                                            self.localDb,
-                                            change.doc
-                                        );
+                                        let bookPath =
+                                            await utilities.getBookPath(
+                                                self.localDb,
+                                                change.doc
+                                            );
 
-                                        utilities.dataMap.books[
-                                            change.id
-                                        ] = bookPath;
+                                        utilities.dataMap.books[change.id] =
+                                            bookPath;
 
                                         await utilities.writeMaps(
                                             plainTextPath,
