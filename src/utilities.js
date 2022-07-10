@@ -191,6 +191,14 @@ const self = (module.exports = {
             return !new RegExp(`${plainTextPath}/undefined/`).test(filePath);
         });
 
+        const notebooks = await self.localDb.books.all({ limit: 999999 });
+        let notebooksSupportedName = {};
+        notebooks.map((notebook) => {
+            notebooksSupportedName[
+                self.removeUnsupportedCharacters(notebook.name)
+            ] = notebook._id;
+        });
+
         await Promise.all(
             prunedTree.map(async (newNotePath) => {
                 const bookPathArray = path
@@ -201,10 +209,8 @@ const self = (module.exports = {
                 // if there is another notebook with the same
                 // exact name this may return the
                 // 'wrong' one.
-                const bookDoc = await self.localDb.books.findWithName(
-                    bookPathArray.pop()
-                );
-                if (bookDoc && bookDoc._id) {
+                const bookId = notebooksSupportedName[bookPathArray.pop()];
+                if (bookId) {
                     const newBody = await fs.promises.readFile(
                         newNotePath,
                         "utf-8"
@@ -214,7 +220,7 @@ const self = (module.exports = {
                     await self.localDb.notes.put({
                         _id: newNoteId,
                         updatedAt: Date.now(),
-                        bookId: bookDoc._id,
+                        bookId: bookId,
                         title: path
                             .basename(newNotePath)
                             .replace(
