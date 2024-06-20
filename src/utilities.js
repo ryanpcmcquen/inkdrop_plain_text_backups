@@ -1,9 +1,15 @@
 import * as fs from "fs";
 import * as path from "path";
+import * as packageInfo from "../package.json";
 
 const self = (module.exports = {
-    dataMap: { books: {}, notes: {}, tree: [] },
+    dataMap: { version: "", books: {}, notes: {}, tree: [] },
     localDb: null,
+    unsupportedCharacters: {
+        win32: /[<>:"\/\\|\?*]/,
+        linux: /[\/]/,
+        darwin: /[:\/]/,
+    },
 
     getBackupPath() {
         return inkdrop.config.get().core.db.backupPath;
@@ -17,7 +23,12 @@ const self = (module.exports = {
         }/.inkdrop_plain_text_backups/__DATA_MAP__.json`;
     },
     getNotePath() {},
-
+    removeUnsupportedCharacters(fileName) {
+        return fileName.replace(
+            new RegExp(this.unsupportedCharacters[process.platform], "g"),
+            ""
+        );
+    },
     async getDataMap(plainTextPath) {
         return JSON.parse(
             await fs.promises.readFile(
@@ -26,13 +37,29 @@ const self = (module.exports = {
             )
         );
     },
+    async migrationRemoveUnsupportedFileNames(plainTextPath) {
+        try {
+            await fs.promises.access(self.getDataMapPath(plainTextPath));
+
+            const tempMap = await self.getDataMap(plainTextPath);
+            if (tempMap && tempMap.version) {
+                return;
+            }
+            const directories = await fs.promises.readdir(plainTextPath);
+            for (const directory of directories) {
+                await fs.promises.rmdir(`${plainTextPath}/${directory}`, {
+                    recursive: true,
+                });
+            }
+        } catch (ignore) {}
+    },
 
     async writeNote(notePath, body) {
         await fs.promises.mkdir(path.dirname(notePath), { recursive: true });
         await fs.promises.writeFile(notePath, body);
     },
     async getBookPath(localDb, doc) {
-        let bookPath = doc.name;
+        let bookPath = self.removeUnsupportedCharacters(doc.name);
         if (doc.parentBookId) {
             let hasParent = true;
             while (hasParent) {
@@ -41,7 +68,9 @@ const self = (module.exports = {
                         ? parentBookData.parentBookId
                         : doc.parentBookId
                 );
-                bookPath = `${parentBookData.name}/${bookPath}`;
+                const supportedParentBookName =
+                    self.removeUnsupportedCharacters(parentBookData.name);
+                bookPath = `${supportedParentBookName}/${bookPath}`;
                 hasParent = Boolean(parentBookData.parentBookId);
             }
         }
@@ -49,6 +78,8 @@ const self = (module.exports = {
     },
     async getDataAndWriteAllNotes(localDb, plainTextPath) {
         // Sync everything one time:
+        await self.migrationRemoveUnsupportedFileNames(plainTextPath);
+        self.dataMap.version = packageInfo.version;
         const allNotes = await localDb.notes.all({ limit: 999999 });
 
         return new Promise(async (resolve, reject) => {
@@ -67,10 +98,12 @@ const self = (module.exports = {
                             bookData
                         );
 
+                        const supportedDocTitle =
+                            self.removeUnsupportedCharacters(doc.title);
                         self.dataMap.books[doc.bookId] = bookPath;
                         self.dataMap.notes[
                             doc._id
-                        ].path = `${bookPath}/${doc.title}.md`;
+                        ].path = `${bookPath}/${supportedDocTitle}.md`;
 
                         await self.writeNote(
                             `${plainTextPath}/${
@@ -158,6 +191,14 @@ const self = (module.exports = {
             return !new RegExp(`${plainTextPath}/undefined/`).test(filePath);
         });
 
+        const notebooks = await self.localDb.books.all({ limit: 999999 });
+        let notebooksSupportedName = {};
+        notebooks.map((notebook) => {
+            notebooksSupportedName[
+                self.removeUnsupportedCharacters(notebook.name)
+            ] = notebook._id;
+        });
+
         await Promise.all(
             prunedTree.map(async (newNotePath) => {
                 const bookPathArray = path
@@ -168,10 +209,8 @@ const self = (module.exports = {
                 // if there is another notebook with the same
                 // exact name this may return the
                 // 'wrong' one.
-                const bookDoc = await self.localDb.books.findWithName(
-                    bookPathArray.pop()
-                );
-                if (bookDoc && bookDoc._id) {
+                const bookId = notebooksSupportedName[bookPathArray.pop()];
+                if (bookId) {
                     const newBody = await fs.promises.readFile(
                         newNotePath,
                         "utf-8"
@@ -181,7 +220,7 @@ const self = (module.exports = {
                     await self.localDb.notes.put({
                         _id: newNoteId,
                         updatedAt: Date.now(),
-                        bookId: bookDoc._id,
+                        bookId: bookId,
                         title: path
                             .basename(newNotePath)
                             .replace(
