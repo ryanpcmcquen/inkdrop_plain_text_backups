@@ -1,7 +1,7 @@
 {
     "name": "plain_text_backups",
     "main": "./lib/index",
-    "version": "0.7.1",
+    "version": "0.8.0",
     "description": "Plain text backups and import for Inkdrop.",
     "keywords": [],
     "repository": "https://github.com/ryanpcmcquen/inkdrop_plain_text_backups.git",
@@ -9,7 +9,9 @@
     "styleSheets": [],
     "scripts": {
         "build": "babel src/ -s -d lib/",
-        "dev": "babel src/ -s -d lib/ --watch"
+        "dev": "babel src/ -s -d lib/ --watch",
+        "prettier:write": "prettier --write \"**/*\"",
+        "prettier": "prettier"
     },
     "engines": {
         "inkdrop": "^5.x"
